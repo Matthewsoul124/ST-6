@@ -8,6 +8,9 @@ import java.awt.*;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class Program {
     public static FileWriter fileWriter;
