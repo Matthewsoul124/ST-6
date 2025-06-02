@@ -2,42 +2,86 @@ package com.mycompany.app;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 
-public class TicTacToeCell extends JButton {
-    private boolean isFill;
-    private int num;
-    private int row;
-    private int col;
-    private char marker;
+public class TicTacToePanel extends JPanel implements ActionListener {
+    private Game game;
+    private TicTacToeCell[] cells = new TicTacToeCell[9];
 
-    public TicTacToeCell(int num, int x, int y) {
-        this.num = num;
-        row = y;
-        col = x;
-        marker = ' ';
-        setText(Character.toString(marker));
-        setFont(new Font("Arial", Font.PLAIN, 40));
+    public TicTacToePanel(GridLayout layout) {
+        super(layout);
+        initializeGame();
+        createCells();
     }
 
-    public void setMarker(String m) {
-        marker = m.charAt(0);
-        setText(m);
-        setEnabled(false);
+    private void initializeGame() {
+        game = new Game();
+        game.cplayer = game.player1;
     }
 
-    public char getMarker() {
-        return marker;
+    private void createCells() {
+        for (int i = 0; i < 9; i++) {
+            int row = i / 3;
+            int col = i % 3;
+            cells[i] = new TicTacToeCell(i, col, row);
+            cells[i].addActionListener(this);
+            add(cells[i]);
+        }
     }
 
-    public int getRow() {
-        return row;
+    public void actionPerformed(ActionEvent e) {
+        TicTacToeCell clickedCell = (TicTacToeCell) e.getSource();
+        
+        if (clickedCell.getMarker() != ' ') return;
+        
+        clickedCell.setMarker(String.valueOf(game.cplayer.symbol));
+        updateGameBoard();
+        
+        if (game.cplayer == game.player1) {
+            makeAIMove();
+        }
+        
+        checkGameState();
     }
 
-    public int getCol() {
-        return col;
+    private void updateGameBoard() {
+        for (int i = 0; i < 9; i++) {
+            game.board[i] = cells[i].getMarker();
+        }
     }
 
-    public int getNum() {
-        return num;
+    private void makeAIMove() {
+        game.player2.move = game.MiniMax(game.board, game.player2);
+        if (game.player2.move > 0) {
+            cells[game.player2.move - 1].setMarker(String.valueOf(game.player2.symbol));
+            updateGameBoard();
+        }
     }
-} 
+
+    private void checkGameState() {
+        game.state = game.checkState(game.board);
+        game.symbol = game.cplayer.symbol;
+
+        if (game.state == State.XWIN) {
+            JOptionPane.showMessageDialog(this, "X wins!", "Game Over", JOptionPane.INFORMATION_MESSAGE);
+            resetGame();
+        } else if (game.state == State.OWIN) {
+            JOptionPane.showMessageDialog(this, "O wins!", "Game Over", JOptionPane.INFORMATION_MESSAGE);
+            resetGame();
+        } else if (game.state == State.DRAW) {
+            JOptionPane.showMessageDialog(this, "Draw!", "Game Over", JOptionPane.INFORMATION_MESSAGE);
+            resetGame();
+        } else {
+            game.cplayer = (game.cplayer == game.player1) ? game.player2 : game.player1;
+        }
+    }
+
+    private void resetGame() {
+        for (TicTacToeCell cell : cells) {
+            cell.setMarker(" ");
+        }
+        Arrays.fill(game.board, ' ');
+        game.cplayer = game.player1;
+        game.state = State.PLAYING;
+    }
+}
